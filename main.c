@@ -126,9 +126,35 @@ struct possibleMovesStruct
     int moves[9][2];
 };
 struct possibleMovesStruct getPossibleMoves(struct board* currBoard);
-int* getBestMove(struct board currBoard)
+int getValue(struct board currBoard)
 {
+    int termVal = terminal(&currBoard);
+    if (termVal != 0){
+        if (termVal != -1 && termVal != 1){
+            termVal = 0;
+        }
+        return termVal;
+    }
+    struct possibleMovesStruct possibleMoves = getPossibleMoves(&currBoard);
 
+    int best_value = currBoard.firstToMove ? -2 : 2;
+    for (int i = 0; i < possibleMoves.moveCount; i++)
+    {
+        struct board new_pos;
+        memcpy(new_pos, currBoard, sizeof(struct board));
+        transform(&new_pos, possibleMoves.moves[i]);
+        int val = getValue(new_pos);
+
+        if (new_pos.firstToMove)
+        {
+            best_value = val > best_value ? val : best_value;
+        }
+        else 
+        {
+            best_value = val < best_value ? val : best_value;
+        }
+    }
+    return best_value;
 }
 struct possibleMovesStruct getPossibleMoves(struct board* currBoard)
 {
