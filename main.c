@@ -118,6 +118,46 @@ int getCharToPlace(bool firstToMove)
 }
 
 /*
+    Engine making move
+*/
+struct possibleMovesStruct 
+{
+    int moveCount;
+    int moves[9][2];
+};
+struct possibleMovesStruct getPossibleMoves(struct board* currBoard);
+int* getBestMove(struct board currBoard)
+{
+
+}
+struct possibleMovesStruct getPossibleMoves(struct board* currBoard)
+{
+    struct possibleMovesStruct possibleMoves = {
+        .moveCount = 0,
+    };
+
+
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            if ((currBoard->board[i][j]) == 0){
+                possibleMoves.moves[possibleMoves.moveCount][0] = i;
+                possibleMoves.moves[possibleMoves.moveCount][1] = j;
+                possibleMoves.moveCount++;
+            }
+
+            if (possibleMoves.moveCount >= 9) {
+                break;
+            }
+        }
+    }
+
+    return possibleMoves;
+}
+
+
+/*
     User making the move
 */
 bool validRow(char in);
