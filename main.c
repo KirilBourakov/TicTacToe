@@ -10,6 +10,7 @@ struct board
 
 void printBoard(struct board currBoard);
 int* getPlayerMove(struct board* currBoard);
+int* getBestMove(struct board currBoard);
 int terminal(struct board* currBoard);
 void transform(struct board* currBoard, int* move);
 
@@ -97,6 +98,9 @@ int terminal(struct board* currBoard)
     return over;
 }
 
+/*
+    Make changes to the board;
+*/
 int getCharToPlace(bool firstToMove);
 void transform(struct board* currBoard, int* move)
 {
