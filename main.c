@@ -10,7 +10,7 @@ struct board
 
 void printBoard(struct board currBoard);
 int* getPlayerMove(struct board* currBoard);
-bool terminal(struct board* currBoard);
+int terminal(struct board* currBoard);
 void transform(struct board* currBoard, int* move);
 
 int main()
@@ -20,18 +20,81 @@ int main()
         .firstToMove = true
     };
 
-    while (!terminal(&currBoard))
+    int state = 0;
+    while (state == 0)
     {
         printBoard(currBoard);
         int* move = getPlayerMove(&currBoard);
         transform(&currBoard, move);
         free(move);
+        state = terminal(&currBoard);
+    }
+    printBoard(currBoard);
+    if (state == 1)
+    {
+        printf("X has won.");
+    }
+    else if (state == -1)
+    {
+        printf("O has won.");
+    }
+    else
+    {
+        printf("Draw.");
     }
 }
 
-bool terminal(struct board* currBoard)
+int terminal(struct board* currBoard)
 {
-    return false;
+    int over = 0;
+    // horizontal
+    for (int i = 0; (i < 3 && !over); i++)
+    {
+        if ((currBoard->board[i][0] == currBoard->board[i][1]) && (currBoard->board[i][1] == currBoard->board[i][2]))
+        {
+            over = currBoard->board[i][0];
+        } 
+    }
+    // vertical
+    for (int i = 0; (i < 3 && !over); i++)
+    {
+        if((currBoard->board[0][i] == currBoard->board[1][i]) && (currBoard->board[1][i] == currBoard->board[2][i]))
+        {
+            over = currBoard->board[0][i];
+        } 
+    }
+    // across
+    if (!over)
+    {
+        if((currBoard->board[0][0] == currBoard->board[1][1]) && (currBoard->board[1][1] == currBoard->board[2][2]))
+        {
+            over = currBoard->board[0][0];
+        } 
+    }
+    if (!over)
+    {
+        if((currBoard->board[0][2] == currBoard->board[1][1]) && (currBoard->board[1][1] == currBoard->board[2][0])){
+            over = currBoard->board[0][2] != 0;
+        }
+    }
+
+    // board full
+    bool full = true;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (currBoard->board[i][j] == 0) {
+                full = false;
+                break;
+            }
+        }
+        if (!full) break;
+    }
+
+    if (full) {
+        over = 3;
+    }
+
+    return over;
 }
 
 int getCharToPlace(bool firstToMove);
