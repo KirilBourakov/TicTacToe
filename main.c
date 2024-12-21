@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct board
 {
@@ -27,9 +28,17 @@ int main()
         printBoard(currBoard);
         int* move = getPlayerMove(&currBoard);
         transform(&currBoard, move);
+
+        state = terminal(&currBoard);
+        if (state == 0)
+        {
+            move = getBestMove(currBoard);
+            transform(&currBoard, move);
+        }
         free(move);
         state = terminal(&currBoard);
     }
+
     printBoard(currBoard);
     if (state == 1)
     {
@@ -49,33 +58,33 @@ int terminal(struct board* currBoard)
 {
     int over = 0;
     // horizontal
-    for (int i = 0; (i < 3 && !over); i++)
+    for (int i = 0; (i < 3 && over == 0); i++)
     {
-        if ((currBoard->board[i][0] == currBoard->board[i][1]) && (currBoard->board[i][1] == currBoard->board[i][2]))
+        if ((currBoard->board[i][0] == currBoard->board[i][1]) && (currBoard->board[i][1] == currBoard->board[i][2]) && currBoard->board[i][0] != 0)
         {
             over = currBoard->board[i][0];
         } 
     }
     // vertical
-    for (int i = 0; (i < 3 && !over); i++)
+    for (int i = 0; (i < 3 && over == 0); i++)
     {
-        if((currBoard->board[0][i] == currBoard->board[1][i]) && (currBoard->board[1][i] == currBoard->board[2][i]))
+        if((currBoard->board[0][i] == currBoard->board[1][i]) && (currBoard->board[1][i] == currBoard->board[2][i]) && currBoard->board[i][0] != 0)
         {
             over = currBoard->board[0][i];
         } 
     }
     // across
-    if (!over)
+    if (over == 0)
     {
-        if((currBoard->board[0][0] == currBoard->board[1][1]) && (currBoard->board[1][1] == currBoard->board[2][2]))
+        if((currBoard->board[0][0] == currBoard->board[1][1]) && (currBoard->board[1][1] == currBoard->board[2][2]) && currBoard->board[0][0] != 0)
         {
             over = currBoard->board[0][0];
         } 
     }
-    if (!over)
+    if (over == 0)
     {
-        if((currBoard->board[0][2] == currBoard->board[1][1]) && (currBoard->board[1][1] == currBoard->board[2][0])){
-            over = currBoard->board[0][2] != 0;
+        if((currBoard->board[0][2] == currBoard->board[1][1]) && (currBoard->board[1][1] == currBoard->board[2][0]) && currBoard->board[0][2] != 0){
+            over = currBoard->board[0][2];
         }
     }
 
@@ -126,36 +135,53 @@ struct possibleMovesStruct
     int moves[9][2];
 };
 struct possibleMovesStruct getPossibleMoves(struct board* currBoard);
-int getValue(struct board currBoard)
-{
-    int termVal = terminal(&currBoard);
-    if (termVal != 0){
-        if (termVal != -1 && termVal != 1){
-            termVal = 0;
-        }
-        return termVal;
-    }
+int getValue(struct board currBoard);
+int* getBestMove(struct board currBoard){
     struct possibleMovesStruct possibleMoves = getPossibleMoves(&currBoard);
-
-    int best_value = currBoard.firstToMove ? -2 : 2;
-    for (int i = 0; i < possibleMoves.moveCount; i++)
-    {
+    bool maximizing = currBoard.firstToMove;
+    int bestValue = maximizing ? -1000 : 1000;
+    int* bestMove = malloc(2 * sizeof(int));
+    for (int i = 0; i < possibleMoves.moveCount; i++) {
         struct board new_pos;
-        memcpy(new_pos, currBoard, sizeof(struct board));
+        memcpy(&new_pos, &currBoard, sizeof(struct board));
         transform(&new_pos, possibleMoves.moves[i]);
         int val = getValue(new_pos);
 
-        if (new_pos.firstToMove)
-        {
-            best_value = val > best_value ? val : best_value;
-        }
-        else 
-        {
-            best_value = val < best_value ? val : best_value;
+        if ((maximizing && val > bestValue) || (!maximizing && val < bestValue)){
+            bestValue = val;
+            bestMove[0] = possibleMoves.moves[i][0];
+            bestMove[1] = possibleMoves.moves[i][1];
         }
     }
+    return bestMove;
+}
+int getValue(struct board currBoard)
+{
+    int termVal = terminal(&currBoard);
+    if (termVal != 0) {
+        return (termVal == 3) ? 0 : termVal;
+    }
+
+    struct possibleMovesStruct possibleMoves = getPossibleMoves(&currBoard);
+    bool maximizing = currBoard.firstToMove; 
+    int best_value = maximizing ? -10000 : 10000;
+
+    for (int i = 0; i < possibleMoves.moveCount; i++) {
+        struct board new_pos;
+        memcpy(&new_pos, &currBoard, sizeof(struct board));
+        transform(&new_pos, possibleMoves.moves[i]);
+        int val = getValue(new_pos);
+        
+        if (maximizing) {
+            best_value = (val > best_value) ? val : best_value;
+        } else {
+            best_value = (val < best_value) ? val : best_value;
+        }
+    }
+    
     return best_value;
 }
+
 struct possibleMovesStruct getPossibleMoves(struct board* currBoard)
 {
     struct possibleMovesStruct possibleMoves = {
